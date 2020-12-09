@@ -16,7 +16,5 @@ public @interface DCacheable {
 
     String key() default "";
 
-    int expire() default 300 * 1000;
-
-
+    int expire() default 300;
 }
