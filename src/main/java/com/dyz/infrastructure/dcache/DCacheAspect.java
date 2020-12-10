@@ -22,15 +22,15 @@ public class DCacheAspect {
     @Autowired(required = false)
     private DCacheHandler handler;
 
-    @Autowired(required = false)
+    @Autowired
     private DKeyGenerator dKeyGenerator;
 
     @Around("@annotation(dCacheable)")
     public Object aroundDCacheable(ProceedingJoinPoint point, DCacheable dCacheable) {
         Object result = null;
         try {
-            System.out.println("param name: " + Arrays.toString(((MethodSignature) point.getSignature()).getParameterNames()));
-            System.out.println("param value: " + Arrays.toString(point.getArgs()));
+            String key = dKeyGenerator.generateKey(dCacheable.key(),(MethodSignature) point.getSignature(),point.getArgs());
+            System.out.println("key generate : "+key);
             result = point.proceed();
         } catch (Throwable e) {
             log.error("DCacheable join point process error", e);
