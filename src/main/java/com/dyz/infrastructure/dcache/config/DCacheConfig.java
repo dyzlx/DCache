@@ -15,7 +15,7 @@ public class DCacheConfig {
     private RedisConfigProperties redisConfigProperties;
 
     @Bean
-    @ConditionalOnProperty(prefix = "dcache.redis", name = "enable", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "dcache.redis", name = "enable", matchIfMissing = false)
     public JedisPoolConfig jedisPoolConfig() {
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         jedisPoolConfig.setMinIdle(redisConfigProperties.getMinIdle());
