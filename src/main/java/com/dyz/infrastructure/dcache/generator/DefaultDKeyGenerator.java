@@ -1,5 +1,6 @@
-package com.dyz.infrastructure.dcache;
+package com.dyz.infrastructure.dcache.generator;
 
+import com.dyz.infrastructure.dcache.DKeyGenerator;
 import com.dyz.infrastructure.dcache.exception.KeyGenerateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;

@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lang3.version>3.9</lang3.version>
         <logback.version>1.2.3</logback.version>
-        <jackson.version>2.9.6</jackson.version>
+        <jackson.version>2.11.2</jackson.version>
         <jedis.version>3.1.0</jedis.version>
         <aspectj.version>1.8.4</aspectj.version>
     </properties>

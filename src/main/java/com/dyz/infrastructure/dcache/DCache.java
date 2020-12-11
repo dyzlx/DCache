@@ -1,6 +1,6 @@
 package com.dyz.infrastructure.dcache;
 
-public interface DCacheHandler {
+public interface DCache {
 
     Object getCache(String key);
 

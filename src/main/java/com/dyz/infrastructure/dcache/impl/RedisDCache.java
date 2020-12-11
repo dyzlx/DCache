@@ -1,10 +1,9 @@
-package com.dyz.infrastructure.dcache.handler;
+package com.dyz.infrastructure.dcache.impl;
 
-import com.dyz.infrastructure.dcache.DCacheHandler;
+import com.dyz.infrastructure.dcache.DCache;
+import com.dyz.infrastructure.dcache.DCacheSerializer;
+import com.dyz.infrastructure.dcache.serializer.JsonDCacheSerializer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.params.SetParams;
@@ -12,14 +11,22 @@ import java.util.Collections;
 import java.util.Objects;
 
 @Slf4j
-@Component
-@ConditionalOnBean(JedisPool.class)
-public class RedisHandler implements DCacheHandler {
+public class RedisDCache implements DCache {
 
-    @Autowired
     private JedisPool jedisPool;
 
+    private DCacheSerializer dCacheSerializer;
+
     private static final String SET_RETURN_SUCCESS = "OK";
+
+    public RedisDCache(JedisPool jedisPool) {
+        this.jedisPool = jedisPool;
+        this.dCacheSerializer = new JsonDCacheSerializer();
+    }
+
+    public void setdCacheSerializer(DCacheSerializer dCacheSerializer) {
+        this.dCacheSerializer = dCacheSerializer;
+    }
 
     @Override
     public Object getCache(String key) {
