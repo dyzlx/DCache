@@ -12,6 +12,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -21,7 +22,7 @@ import java.util.Objects;
 @Slf4j
 public class DCacheAspect {
 
-    @Autowired(required = false)
+    @Autowired
     private DCache dCache;
 
     @Autowired

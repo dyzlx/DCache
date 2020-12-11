@@ -15,7 +15,7 @@ public class RedisDCache implements DCache {
 
     private JedisPool jedisPool;
 
-    private DCacheSerializer dCacheSerializer;
+    private DCacheSerializer<Object> dCacheSerializer;
 
     private static final String SET_RETURN_SUCCESS = "OK";
 
@@ -24,28 +24,76 @@ public class RedisDCache implements DCache {
         this.dCacheSerializer = new JsonDCacheSerializer();
     }
 
-    public void setdCacheSerializer(DCacheSerializer dCacheSerializer) {
+    public void setdCacheSerializer(DCacheSerializer<Object> dCacheSerializer) {
         this.dCacheSerializer = dCacheSerializer;
     }
 
     @Override
     public Object getCache(String key) {
-        return null;
+        Object result = null;
+        Jedis jedis = null;
+        try {
+            log.info("get cache from redis, key={}", key);
+            jedis = getJedisClient();
+            String jedisResult = jedis.get(key);
+            if(Objects.nonNull(jedisResult)) {
+                result = dCacheSerializer.deserialize(jedisResult.getBytes());
+            }
+        } catch (Exception e) {
+            log.error("get cache from redis error", e);
+        } finally {
+            releaseJedisClient(jedis);
+        }
+        return result;
     }
 
     @Override
     public void setCache(String key, Object value) {
-
+        Jedis jedis = null;
+        try {
+            log.info("set cache to redis, key={}", key);
+            jedis = getJedisClient();
+            String result = jedis.set(key, new String(dCacheSerializer.serialize(value)));
+            if(!SET_RETURN_SUCCESS.equals(result)) {
+                log.error("set cache to redis error, resultCode={}", result);
+            }
+        } catch (Exception e) {
+            log.error("set cache to redis error", e);
+        } finally {
+            releaseJedisClient(jedis);
+        }
     }
 
     @Override
-    public void setCache(String key, Object value, long expired) {
-
+    public void setCache(String key, Object value, int expired) {
+        Jedis jedis = null;
+        try {
+            log.info("set cache to redis, key={}, expired={}s", key, expired);
+            jedis = getJedisClient();
+            String result = jedis.set(key, new String(dCacheSerializer.serialize(value)),
+                    SetParams.setParams().ex(expired));
+            if(!SET_RETURN_SUCCESS.equals(result)) {
+                log.error("set cache to redis error, resultCode={}", result);
+            }
+        } catch (Exception e) {
+            log.error("set cache to redis error", e);
+        } finally {
+            releaseJedisClient(jedis);
+        }
     }
 
     @Override
     public void deleteCache(String key) {
-
+        Jedis jedis = null;
+        try {
+            log.info("delete cache from redis, key={}", key);
+            jedis = getJedisClient();
+            jedis.del(key);
+        } catch (Exception e) {
+            log.error("delete cache from redis errir", e);
+        } finally {
+            releaseJedisClient(jedis);
+        }
     }
 
     public boolean tryGetDistributeLock(Jedis jedis, String lockKey, String requestId, long expireTime) {

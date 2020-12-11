@@ -26,7 +26,7 @@ public class HashMapDCache implements DCache {
     }
 
     @Override
-    public void setCache(String key, Object value, long expired) {
+    public void setCache(String key, Object value, int expired) {
         setCache(key, value);
     }
 
@@ -34,5 +34,9 @@ public class HashMapDCache implements DCache {
     public void deleteCache(String key) {
         log.info("delete cache from map cache, key={}", key);
         store.remove(key);
+    }
+
+    public int getHashMapCacheSize() {
+        return store.size();
     }
 }

@@ -40,12 +40,14 @@ public class DCacheConfig {
     @ConditionalOnBean(JedisPoolConfig.class)
     public JedisPool jedisPool(JedisPoolConfig jedisPoolConfig) {
         return new JedisPool(jedisPoolConfig, redisConfigProperties.getHost(), redisConfigProperties.getPort()
-                , redisConfigProperties.getTimeout(), redisConfigProperties.getPassword(), redisConfigProperties.getDbIndex());
+                , redisConfigProperties.getTimeout(), redisConfigProperties.getPassword(),
+                redisConfigProperties.getDbIndex());
     }
 
     @Order(97)
     @Bean
     @ConditionalOnBean(JedisPool.class)
+    @ConditionalOnMissingBean(RedisDCache.class)
     public DCache redisDCache(JedisPool jedisPool) {
         return new RedisDCache(jedisPool);
     }
@@ -55,6 +57,7 @@ public class DCacheConfig {
      * @return
      */
     @Order(98)
+    @Bean
     @ConditionalOnMissingBean(DCache.class)
     public DCache hashMapDCache() {
         return new HashMapDCache();

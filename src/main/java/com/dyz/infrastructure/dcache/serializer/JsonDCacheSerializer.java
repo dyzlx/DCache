@@ -39,7 +39,7 @@ public class JsonDCacheSerializer implements DCacheSerializer<Object> {
 
     @Override
     public Object deserialize(byte[] bytes) throws SerializationException {
-        if(bytes == null) {
+        if(bytes == null || bytes.length == 0) {
             return null;
         }
         try {

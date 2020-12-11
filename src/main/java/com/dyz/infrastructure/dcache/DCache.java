@@ -6,7 +6,7 @@ public interface DCache {
 
     void setCache(String key, Object value);
 
-    void setCache(String key, Object value, long expired);
+    void setCache(String key, Object value, int expired);
 
     void deleteCache(String key);
 }
