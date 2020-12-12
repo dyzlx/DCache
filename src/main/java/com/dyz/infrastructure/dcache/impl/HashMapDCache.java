@@ -11,7 +11,9 @@ public class HashMapDCache implements DCache {
 
     private final Map<String, Object> store = new ConcurrentHashMap<>(16);
 
-    public HashMapDCache() {}
+    public HashMapDCache() {
+        log.info("hash map cache init");
+    }
 
     @Override
     public Object getCache(String key) {

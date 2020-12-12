@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "dcache.redis")
 public class RedisConfigProperties {
 
+    private boolean enable;
+
     private String host;
 
     private String password;

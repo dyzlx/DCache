@@ -7,12 +7,15 @@ import com.dyz.infrastructure.dcache.annotations.DCacheEvict;
 import com.dyz.infrastructure.dcache.annotations.DCachePut;
 import com.dyz.infrastructure.dcache.annotations.DCacheable;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -26,14 +29,17 @@ public class DCacheAspect {
     private DCache dCache;
 
     @Autowired
-    private DKeyGenerator dKeyGenerator;
+    @Qualifier(value = "ordinaryDKeyGenerator")
+    private DKeyGenerator defaultDKeyGenerator;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Around("@annotation(dCacheable)")
     public Object aroundDCacheable(ProceedingJoinPoint point, DCacheable dCacheable) {
         Object result = null;
         try {
-            MethodSignature methodSignature = (MethodSignature)point.getSignature();
-            String key = dKeyGenerator.generateKey(dCacheable.key(),methodSignature,point.getArgs());
+            String key = generateKey(point, dCacheable.key(), dCacheable.keyGeneratorName());
             result = dCache.getCache(key);
             if(Objects.nonNull(result)) {
                 return result;
@@ -50,8 +56,7 @@ public class DCacheAspect {
     public Object aroundDCacheEvict(ProceedingJoinPoint point, DCacheEvict dCacheEvict) {
         Object result = null;
         try {
-            MethodSignature methodSignature = (MethodSignature)point.getSignature();
-            String key = dKeyGenerator.generateKey(dCacheEvict.key(),methodSignature,point.getArgs());
+            String key = generateKey(point, dCacheEvict.key(), dCacheEvict.keyGeneratorName());
             result = point.proceed();
             dCache.deleteCache(key);
         } catch (Throwable e) {
@@ -64,13 +69,30 @@ public class DCacheAspect {
     public Object aroundDCachePut(ProceedingJoinPoint point, DCachePut dCachePut) {
         Object result = null;
         try {
-            MethodSignature methodSignature = (MethodSignature)point.getSignature();
-            String key = dKeyGenerator.generateKey(dCachePut.key(),methodSignature,point.getArgs());
+            String key = generateKey(point, dCachePut.key(), dCachePut.keyGeneratorName());
             result = point.proceed();
-            dCache.setCache(key, result, dCachePut.expire());
+            if(dCachePut.deleteKeyInsteadOfUpdate()) {
+                dCache.deleteCache(key);
+            } else {
+                dCache.setCache(key, result, dCachePut.expire());
+            }
         } catch (Throwable e) {
             log.error("DCachePut join point process error", e);
         }
         return result;
+    }
+
+    private String generateKey(ProceedingJoinPoint point, String keyDescription, String keyGeneratorName) {
+        MethodSignature methodSignature = (MethodSignature)point.getSignature();
+        if(StringUtils.isBlank(keyGeneratorName)) {
+            return defaultDKeyGenerator.generateKey(keyDescription,methodSignature,point.getArgs());
+        }
+        try {
+            DKeyGenerator dKeyGenerator = (DKeyGenerator) applicationContext.getBean(keyGeneratorName);
+            return dKeyGenerator.generateKey(keyDescription, methodSignature, point.getArgs());
+        } catch (NoSuchBeanDefinitionException e) {
+            log.warn("no such DKeyGenerator found, bean name={}, use default key generator instead.", keyGeneratorName);
+            return defaultDKeyGenerator.generateKey(keyDescription,methodSignature,point.getArgs());
+        }
     }
 }

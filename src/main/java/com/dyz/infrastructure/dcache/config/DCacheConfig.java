@@ -2,6 +2,9 @@ package com.dyz.infrastructure.dcache.config;
 
 import com.dyz.infrastructure.dcache.DCache;
 import com.dyz.infrastructure.dcache.DCacheSerializer;
+import com.dyz.infrastructure.dcache.DKeyGenerator;
+import com.dyz.infrastructure.dcache.generator.OrdinaryDKeyGenerator;
+import com.dyz.infrastructure.dcache.generator.SqELDKeyGenerator;
 import com.dyz.infrastructure.dcache.impl.HashMapDCache;
 import com.dyz.infrastructure.dcache.impl.RedisDCache;
 import com.dyz.infrastructure.dcache.serializer.JsonDCacheSerializer;
@@ -23,7 +26,7 @@ public class DCacheConfig {
 
     @Order(95)
     @Bean
-    @ConditionalOnProperty(prefix = "dcache.redis", name = "enable", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "dcache.redis", name = "enable", havingValue = "true", matchIfMissing = false)
     public JedisPoolConfig jedisPoolConfig() {
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         jedisPoolConfig.setMinIdle(redisConfigProperties.getMinIdle());
@@ -61,5 +64,15 @@ public class DCacheConfig {
     @ConditionalOnMissingBean(DCache.class)
     public DCache hashMapDCache() {
         return new HashMapDCache();
+    }
+
+    @Bean(name = "ordinaryDKeyGenerator")
+    public DKeyGenerator ordinaryDKeyGenerator() {
+        return new OrdinaryDKeyGenerator();
+    }
+
+    @Bean(name = "sqELDKeyGenerator")
+    public DKeyGenerator sqELDKeyGenerator() {
+        return new SqELDKeyGenerator();
     }
 }

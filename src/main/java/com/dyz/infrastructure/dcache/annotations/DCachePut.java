@@ -16,4 +16,8 @@ public @interface DCachePut {
     String key() default "";
 
     int expire() default 300;
+
+    String keyGeneratorName() default "";
+
+    boolean deleteKeyInsteadOfUpdate() default false;
 }

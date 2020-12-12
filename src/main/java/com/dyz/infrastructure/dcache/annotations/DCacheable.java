@@ -17,4 +17,6 @@ public @interface DCacheable {
     String key() default "";
 
     int expire() default 300;
+
+    String keyGeneratorName() default "";
 }

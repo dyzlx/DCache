@@ -22,6 +22,7 @@ public class RedisDCache implements DCache {
     public RedisDCache(JedisPool jedisPool) {
         this.jedisPool = jedisPool;
         this.dCacheSerializer = new JsonDCacheSerializer();
+        log.info("redis cache init");
     }
 
     public void setdCacheSerializer(DCacheSerializer<Object> dCacheSerializer) {

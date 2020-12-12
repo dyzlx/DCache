@@ -12,5 +12,8 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 public @interface DCacheEvict {
+
     String key() default "";
+
+    String keyGeneratorName() default "";
 }
