@@ -19,4 +19,6 @@ public @interface DCacheable {
     int expire() default 300;
 
     String keyGeneratorName() default "";
+
+    boolean lockWhenQueryDB() default false;
 }

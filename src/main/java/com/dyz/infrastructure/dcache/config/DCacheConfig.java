@@ -1,13 +1,13 @@
 package com.dyz.infrastructure.dcache.config;
 
 import com.dyz.infrastructure.dcache.DCache;
-import com.dyz.infrastructure.dcache.DCacheSerializer;
 import com.dyz.infrastructure.dcache.DKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.OrdinaryDKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.SqELDKeyGenerator;
-import com.dyz.infrastructure.dcache.impl.HashMapDCache;
-import com.dyz.infrastructure.dcache.impl.RedisDCache;
+import com.dyz.infrastructure.dcache.impl.map.HashMapDCache;
+import com.dyz.infrastructure.dcache.impl.redis.RedisDCache;
 import com.dyz.infrastructure.dcache.serializer.JsonDCacheSerializer;
+import com.dyz.infrastructure.dcache.impl.redis.RedisUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -52,7 +52,9 @@ public class DCacheConfig {
     @ConditionalOnBean(JedisPool.class)
     @ConditionalOnMissingBean(RedisDCache.class)
     public DCache redisDCache(JedisPool jedisPool) {
-        return new RedisDCache(jedisPool);
+        RedisDCache redisDCache = new RedisDCache(jedisPool);
+        redisDCache.setdCacheSerializer(new JsonDCacheSerializer());
+        return redisDCache;
     }
 
     /**

@@ -23,6 +23,8 @@ import java.util.Objects;
 @Slf4j
 public class SqELDKeyGenerator implements DKeyGenerator {
 
+    private static final String SQEL_KEY = "#";
+
     private SpelExpressionParser parser = new SpelExpressionParser();
 
     private DefaultParameterNameDiscoverer nameDiscoverer = new DefaultParameterNameDiscoverer();
@@ -35,7 +37,14 @@ public class SqELDKeyGenerator implements DKeyGenerator {
         if(StringUtils.isBlank(sqELKeyDescription)) {
             return generateKeyIfKeyDescIsEmpty(methodSignature, args);
         }
-        return generateKeyBySpEL(sqELKeyDescription, methodSignature, args);
+        String result = sqELKeyDescription;
+        String[] sqELKeyDescriptionArrays = sqELKeyDescription.split(KEY_SPLIT);
+        for(String item : sqELKeyDescriptionArrays) {
+            if(item.contains(SQEL_KEY)) {
+                result = result.replaceAll(item, generateKeyBySpEL(item, methodSignature, args));
+            }
+        }
+        return result;
     }
 
     private String generateKeyBySpEL(String spELString, MethodSignature methodSignature, Object[] args) {
