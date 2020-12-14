@@ -1,5 +1,7 @@
 package com.dyz.infrastructure.dcache;
 
+import org.aspectj.lang.ProceedingJoinPoint;
+
 public interface DCache {
 
     Object getCache(String key);
@@ -10,7 +12,5 @@ public interface DCache {
 
     void deleteCache(String key);
 
-    boolean lockForQueryDB(String requestId);
-
-    boolean unlockForQueryDB(String requestId);
+    Object queryDBThenSetCacheWithLock(String key, ProceedingJoinPoint point, int expireTime) throws Throwable;
 }

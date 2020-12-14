@@ -55,31 +55,22 @@ public class RedisUtils {
         }
     }
 
-    public boolean tryGetDistributeLock(Jedis jedis, String lockKey, String requestId, long expireTime, long timeout) {
-        long startTime = System.currentTimeMillis();
-        log.info("try to get redis lock, key={}, value(requestId)={}", lockKey, requestId);
-        while((System.currentTimeMillis() - startTime) < timeout) {
-            try {
-                String redisReturn = jedis.set(lockKey, requestId, SetParams.setParams().nx().px(expireTime));
-                if(RedisConstant.SET_RETURN_SUCCESS.equals(redisReturn)) {
-                    log.info("get redis lock success, requestId={}", requestId);
-                    return true;
-                }
-            } catch (Exception e) {
-                log.error("try get distribute lock error", e);
-                return false;
-            }
+    public boolean tryGetDistributeLock(Jedis jedis, String lockKey, String requestId, long expireTime) {
+        //log.info("try to get redis lock, key={}, value(requestId)={}", lockKey, requestId);
+        String redisReturn = jedis.set(lockKey, requestId, SetParams.setParams().nx().px(expireTime));
+        if(RedisConstant.SET_RETURN_SUCCESS.equals(redisReturn)) {
+            //log.info("get redis lock success");
+            return true;
         }
-        log.warn("get redis lock timout!");
         return false;
     }
 
-    public boolean tryGetDistributeLock(String lockKey, String requestId, long expireTime, long timeout) {
+    public boolean tryGetDistributeLock(String lockKey, String requestId, long expireTime) {
         boolean result = false;
         Jedis jedis = null;
         try {
             jedis = getJedisClient();
-            result = tryGetDistributeLock(jedis, lockKey, requestId, expireTime, timeout);
+            result = tryGetDistributeLock(jedis, lockKey, requestId, expireTime);
         } catch (Exception e) {
             log.error("try get distribute lock error", e);
         } finally {
@@ -89,15 +80,11 @@ public class RedisUtils {
     }
 
     public boolean tryReleaseDistributeLock(Jedis jedis, String lockKey, String requestId) {
-        long result = 0;
-        try {
-            log.info("try to release redis lock, key={}, value(requestId)={}", lockKey, requestId);
-            String script = "if redis.call('get',KEYS[1])==ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
-            result = (long) jedis.eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestId));
-            log.info("release redis lock success, requestId={}", requestId);
-        } catch (Exception e) {
-            log.error("try release distribute lock error", e);
-        }
+        long result;
+        //log.info("try to release redis lock, key={}, value(requestId)={}", lockKey, requestId);
+        String script = "if redis.call('get',KEYS[1])==ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
+        result = (long) jedis.eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestId));
+        //log.info("release redis lock result={}", result);
         return 1 == result;
     }
 

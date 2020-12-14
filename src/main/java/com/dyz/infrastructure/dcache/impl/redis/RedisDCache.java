@@ -4,14 +4,18 @@ import com.dyz.infrastructure.dcache.DCache;
 import com.dyz.infrastructure.dcache.DCacheSerializer;
 import com.dyz.infrastructure.dcache.serializer.ObjectDCacheSerializer;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.params.SetParams;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Slf4j
 public class RedisDCache implements DCache {
+
+    private static final long LOCK_KEY_EXPIRE_MILLTIME = 1000 * 10;
 
     private DCacheSerializer<Object> dCacheSerializer;
 
@@ -24,7 +28,7 @@ public class RedisDCache implements DCache {
         log.info("redis cache init");
     }
 
-    public void setdCacheSerializer(DCacheSerializer<Object> dCacheSerializer) {
+    public void setDCacheSerializer(DCacheSerializer<Object> dCacheSerializer) {
         this.dCacheSerializer = dCacheSerializer;
     }
 
@@ -97,12 +101,29 @@ public class RedisDCache implements DCache {
     }
 
     @Override
-    public boolean lockForQueryDB(String requestId) {
-        return redisUtils.tryGetDistributeLock(RedisConstant.REDIS_LOCK_KEY, requestId, 1000 * 5, 500);
-    }
-
-    @Override
-    public boolean unlockForQueryDB(String requestId) {
-        return redisUtils.tryReleaseDistributeLock(RedisConstant.REDIS_LOCK_KEY, requestId);
+    public Object queryDBThenSetCacheWithLock(String key, ProceedingJoinPoint point, int expireTime) throws Throwable {
+        String lockKey = RedisConstant.REDIS_LOCK_KEY + key;
+        String requestId = UUID.randomUUID().toString();
+        Object result;
+        if(redisUtils.tryGetDistributeLock(lockKey, requestId, LOCK_KEY_EXPIRE_MILLTIME)) {
+            try {
+                result = this.getCache(key);
+                if(Objects.nonNull(result)) {
+                    return result;
+                }
+                result = point.proceed();
+                this.setCache(key, result, expireTime);
+            } catch (Throwable e) {
+                log.error("error when query db then set redis cache with lock, key={}", key);
+                throw e;
+            } finally {
+                redisUtils.tryReleaseDistributeLock(lockKey, requestId);
+            }
+        } else {
+            //log.debug("try get lock fail, sleep a while, try again");
+            //Thread.sleep(50);
+            result = queryDBThenSetCacheWithLock(key, point, expireTime);
+        }
+        return result;
     }
 }

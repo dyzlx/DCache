@@ -2,8 +2,10 @@ package com.dyz.infrastructure.dcache.impl.map;
 
 import com.dyz.infrastructure.dcache.DCache;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -44,29 +46,22 @@ public class HashMapDCache implements DCache {
     }
 
     @Override
-    public boolean lockForQueryDB(String requestId) {
-        log.info("try to get a local lock");
+    public Object queryDBThenSetCacheWithLock(String key, ProceedingJoinPoint point, int expireTime) throws Throwable {
+        Object result;
         try {
-            return lock.tryLock(500, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            log.error("try to get local lock error", e);
-            return false;
-        }
-    }
-
-    @Override
-    public boolean unlockForQueryDB(String requestId) {
-        log.info("trg to release local lock");
-        try {
+            lock.lock();
+            result = this.getCache(key);
+            if(Objects.nonNull(result)) {
+                return result;
+            }
+            result = point.proceed();
+            this.setCache(key, result, expireTime);
+        } catch (Throwable e) {
+            log.error("error when query db then set map cache with lock, key={}", key);
+            throw e;
+        } finally {
             lock.unlock();
-            return true;
-        } catch (Exception e) {
-            log.error("try to release local lock error", e);
-            return false;
         }
-    }
-
-    public int getHashMapCacheSize() {
-        return store.size();
+        return result;
     }
 }

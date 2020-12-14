@@ -19,7 +19,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
-import java.util.UUID;
 
 @Component
 @Aspect
@@ -45,8 +44,12 @@ public class DCacheAspect {
             if(Objects.nonNull(result)) {
                 return result;
             }
-            result = point.proceed();
-            dCache.setCache(key, result, dCacheable.expire());
+            if(dCacheable.lockWhenQueryDB()) {
+                result = dCache.queryDBThenSetCacheWithLock(key, point, dCacheable.expire());
+            } else {
+                result = point.proceed();
+                dCache.setCache(key, result, dCacheable.expire());
+            }
         } catch (Throwable e) {
             log.error("DCacheable join point process error", e);
         }
