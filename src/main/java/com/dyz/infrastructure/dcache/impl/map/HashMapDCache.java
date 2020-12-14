@@ -24,8 +24,9 @@ public class HashMapDCache implements DCache {
 
     @Override
     public Object getCache(String key) {
-        log.info("get cache from map cache, key={}", key);
-        return store.get(key);
+        Object result = store.get(key);
+        log.info("get cache from map cache, key={}, value={}", key, result);
+        return result;
     }
 
     @Override
@@ -46,10 +47,12 @@ public class HashMapDCache implements DCache {
     }
 
     @Override
-    public Object queryDBThenSetCacheWithLock(String key, ProceedingJoinPoint point, int expireTime) throws Throwable {
+    public Object missCacheResetWithLock(String key, ProceedingJoinPoint point, int expireTime, long timeout)
+            throws Throwable {
         Object result;
+        boolean isLock = false;
         try {
-            lock.lock();
+            isLock = lock.tryLock(timeout, TimeUnit.MILLISECONDS);
             result = this.getCache(key);
             if(Objects.nonNull(result)) {
                 return result;
@@ -60,7 +63,9 @@ public class HashMapDCache implements DCache {
             log.error("error when query db then set map cache with lock, key={}", key);
             throw e;
         } finally {
-            lock.unlock();
+            if(isLock) {
+                lock.unlock();
+            }
         }
         return result;
     }

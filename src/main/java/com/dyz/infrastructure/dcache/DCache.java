@@ -12,5 +12,6 @@ public interface DCache {
 
     void deleteCache(String key);
 
-    Object queryDBThenSetCacheWithLock(String key, ProceedingJoinPoint point, int expireTime) throws Throwable;
+    Object missCacheResetWithLock(String key, ProceedingJoinPoint point,
+                                  int expireTime, long timeout) throws Throwable;
 }

@@ -15,7 +15,7 @@ import java.util.UUID;
 @Slf4j
 public class RedisDCache implements DCache {
 
-    private static final long LOCK_KEY_EXPIRE_MILLTIME = 1000 * 10;
+    private static final long LOCK_KEY_EXPIRE_MILLS_TIME = 1000 * 5;
 
     private DCacheSerializer<Object> dCacheSerializer;
 
@@ -101,11 +101,12 @@ public class RedisDCache implements DCache {
     }
 
     @Override
-    public Object queryDBThenSetCacheWithLock(String key, ProceedingJoinPoint point, int expireTime) throws Throwable {
+    public Object missCacheResetWithLock(String key, ProceedingJoinPoint point, int expireTime, long timeout)
+            throws Throwable {
         String lockKey = RedisConstant.REDIS_LOCK_KEY + key;
         String requestId = UUID.randomUUID().toString();
         Object result;
-        if(redisUtils.tryGetDistributeLock(lockKey, requestId, LOCK_KEY_EXPIRE_MILLTIME)) {
+        if(redisUtils.tryGetDistributeLock(lockKey, requestId, timeout)) {
             try {
                 result = this.getCache(key);
                 if(Objects.nonNull(result)) {
@@ -120,9 +121,7 @@ public class RedisDCache implements DCache {
                 redisUtils.tryReleaseDistributeLock(lockKey, requestId);
             }
         } else {
-            //log.debug("try get lock fail, sleep a while, try again");
-            //Thread.sleep(50);
-            result = queryDBThenSetCacheWithLock(key, point, expireTime);
+            result = missCacheResetWithLock(key, point, expireTime, timeout);
         }
         return result;
     }

@@ -36,7 +36,7 @@ public class DCacheAspect {
     private ApplicationContext applicationContext;
 
     @Around("@annotation(dCacheable)")
-    public Object aroundDCacheable(ProceedingJoinPoint point, DCacheable dCacheable) {
+    public Object aroundDCacheable(ProceedingJoinPoint point, DCacheable dCacheable) throws Throwable {
         Object result = null;
         try {
             String key = generateKey(point, dCacheable.key(), dCacheable.keyGeneratorName());
@@ -45,19 +45,21 @@ public class DCacheAspect {
                 return result;
             }
             if(dCacheable.lockWhenQueryDB()) {
-                result = dCache.queryDBThenSetCacheWithLock(key, point, dCacheable.expire());
+                result = dCache.missCacheResetWithLock(
+                        key, point, dCacheable.expire(), dCacheable.lockTimeout());
             } else {
                 result = point.proceed();
                 dCache.setCache(key, result, dCacheable.expire());
             }
         } catch (Throwable e) {
             log.error("DCacheable join point process error", e);
+            throw e;
         }
         return result;
     }
 
     @Around("@annotation(dCacheEvict)")
-    public Object aroundDCacheEvict(ProceedingJoinPoint point, DCacheEvict dCacheEvict) {
+    public Object aroundDCacheEvict(ProceedingJoinPoint point, DCacheEvict dCacheEvict) throws Throwable {
         Object result = null;
         try {
             String key = generateKey(point, dCacheEvict.key(), dCacheEvict.keyGeneratorName());
@@ -65,12 +67,13 @@ public class DCacheAspect {
             dCache.deleteCache(key);
         } catch (Throwable e) {
             log.error("DCacheEvict join point process error", e);
+            throw e;
         }
         return result;
     }
 
     @Around("@annotation(dCachePut)")
-    public Object aroundDCachePut(ProceedingJoinPoint point, DCachePut dCachePut) {
+    public Object aroundDCachePut(ProceedingJoinPoint point, DCachePut dCachePut) throws Throwable {
         Object result = null;
         try {
             String key = generateKey(point, dCachePut.key(), dCachePut.keyGeneratorName());
@@ -82,6 +85,7 @@ public class DCacheAspect {
             }
         } catch (Throwable e) {
             log.error("DCachePut join point process error", e);
+            throw e;
         }
         return result;
     }
