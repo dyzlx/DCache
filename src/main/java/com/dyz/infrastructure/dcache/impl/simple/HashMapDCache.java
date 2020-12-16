@@ -1,4 +1,4 @@
-package com.dyz.infrastructure.dcache.impl.map;
+package com.dyz.infrastructure.dcache.impl.simple;
 
 import com.dyz.infrastructure.dcache.DCache;
 import lombok.extern.slf4j.Slf4j;
@@ -19,19 +19,19 @@ public class HashMapDCache implements DCache {
     private final Map<String, Object> store = new ConcurrentHashMap<>(16);
 
     public HashMapDCache() {
-        log.info("hash map cache init");
+        log.info("hash simple cache init");
     }
 
     @Override
     public Object getCache(String key) {
         Object result = store.get(key);
-        log.info("get cache from map cache, key={}, value={}", key, result);
+        log.info("get cache from simple cache, key={}, value={}", key, result);
         return result;
     }
 
     @Override
     public void setCache(String key, Object value) {
-        log.info("set cache to map cache, key={}", key);
+        log.info("set cache to simple cache, key={}", key);
         store.put(key, value);
     }
 
@@ -42,7 +42,7 @@ public class HashMapDCache implements DCache {
 
     @Override
     public void deleteCache(String key) {
-        log.info("delete cache from map cache, key={}", key);
+        log.info("delete cache from simple cache, key={}", key);
         store.remove(key);
     }
 
@@ -60,7 +60,7 @@ public class HashMapDCache implements DCache {
             result = point.proceed();
             this.setCache(key, result, expireTime);
         } catch (Throwable e) {
-            log.error("error when query db then set map cache with lock, key={}", key);
+            log.error("error when query db then set simple cache with lock, key={}", key);
             throw e;
         } finally {
             if(isLock) {

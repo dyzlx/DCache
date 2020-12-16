@@ -4,7 +4,7 @@ import com.dyz.infrastructure.dcache.DCache;
 import com.dyz.infrastructure.dcache.DKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.OrdinaryDKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.SqELDKeyGenerator;
-import com.dyz.infrastructure.dcache.impl.map.HashMapDCache;
+import com.dyz.infrastructure.dcache.impl.simple.HashMapDCache;
 import com.dyz.infrastructure.dcache.impl.redis.RedisDCache;
 import com.dyz.infrastructure.dcache.serializer.JsonDCacheSerializer;
 import com.dyz.infrastructure.dcache.serializer.ObjectDCacheSerializer;
