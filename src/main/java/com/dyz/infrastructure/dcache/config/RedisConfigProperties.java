@@ -30,4 +30,11 @@ public class RedisConfigProperties {
     private Integer dbIndex;
 
     private Boolean testOnBorrow;
+
+    private Serializer serializer;
+
+    public enum Serializer {
+        json,
+        binary
+    }
 }
