@@ -4,6 +4,7 @@ import com.dyz.infrastructure.dcache.DCache;
 import com.dyz.infrastructure.dcache.DKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.OrdinaryDKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.SqELDKeyGenerator;
+import com.dyz.infrastructure.dcache.impl.redis.RedisManager;
 import com.dyz.infrastructure.dcache.impl.simple.HashMapDCache;
 import com.dyz.infrastructure.dcache.impl.redis.RedisDCache;
 import com.dyz.infrastructure.dcache.serializer.JsonDCacheSerializer;
@@ -56,8 +57,14 @@ public class DCacheConfig {
 
     @Bean
     @ConditionalOnBean(JedisPool.class)
-    public DCache redisDCache(JedisPool jedisPool) {
-        RedisDCache redisDCache = new RedisDCache(jedisPool);
+    public RedisManager redisManager(JedisPool jedisPool) {
+        return new RedisManager(jedisPool);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedisManager.class)
+    public DCache redisDCache(RedisManager redisManager) {
+        RedisDCache redisDCache = new RedisDCache(redisManager);
         RedisConfigProperties.Serializer serializer = redisConfigProperties.getSerializer();
         if(RedisConfigProperties.Serializer.binary.equals(serializer)) {
             redisDCache.setDCacheSerializer(new ObjectDCacheSerializer());

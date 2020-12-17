@@ -1,6 +1,7 @@
 package com.dyz.infrastructure.dcache;
 
-import org.aspectj.lang.ProceedingJoinPoint;
+
+import com.dyz.infrastructure.dcache.lock.DCacheLock;
 
 public interface DCache {
 
@@ -12,6 +13,5 @@ public interface DCache {
 
     void deleteCache(String key);
 
-    Object missCacheResetWithLock(String key, ProceedingJoinPoint point,
-                                  int expireTime, long timeout) throws Throwable;
+    DCacheLock getDCacheLock();
 }

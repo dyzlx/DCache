@@ -6,6 +6,7 @@ import com.dyz.infrastructure.dcache.DKeyGenerator;
 import com.dyz.infrastructure.dcache.annotations.DCacheEvict;
 import com.dyz.infrastructure.dcache.annotations.DCachePut;
 import com.dyz.infrastructure.dcache.annotations.DCacheable;
+import com.dyz.infrastructure.dcache.lock.DCacheLock;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -25,7 +26,6 @@ import java.util.Objects;
 @Slf4j
 public class DCacheAspect {
 
-    @Autowired
     private DCache dCache;
 
     @Autowired
@@ -35,9 +35,16 @@ public class DCacheAspect {
     @Autowired
     private ApplicationContext applicationContext;
 
+    private DCacheLock dCacheLock;
+
+    public DCacheAspect(DCache dCache) {
+        this.dCache = dCache;
+        dCacheLock = dCache.getDCacheLock();
+    }
+
     @Around("@annotation(dCacheable)")
     public Object aroundDCacheable(ProceedingJoinPoint point, DCacheable dCacheable) throws Throwable {
-        Object result = null;
+        Object result;
         try {
             String key = generateKey(point, dCacheable.key(), dCacheable.keyGeneratorName());
             result = dCache.getCache(key);
@@ -45,8 +52,7 @@ public class DCacheAspect {
                 return result;
             }
             if(dCacheable.lockWhenQueryDB()) {
-                result = dCache.missCacheResetWithLock(
-                        key, point, dCacheable.expire(), dCacheable.lockTimeout());
+                missCacheThenResetCacheWithLock(point, dCacheLock, key, dCacheable.expire());
             } else {
                 result = point.proceed();
                 dCache.setCache(key, result, dCacheable.expire());
@@ -60,7 +66,7 @@ public class DCacheAspect {
 
     @Around("@annotation(dCacheEvict)")
     public Object aroundDCacheEvict(ProceedingJoinPoint point, DCacheEvict dCacheEvict) throws Throwable {
-        Object result = null;
+        Object result;
         try {
             String key = generateKey(point, dCacheEvict.key(), dCacheEvict.keyGeneratorName());
             result = point.proceed();
@@ -74,7 +80,7 @@ public class DCacheAspect {
 
     @Around("@annotation(dCachePut)")
     public Object aroundDCachePut(ProceedingJoinPoint point, DCachePut dCachePut) throws Throwable {
-        Object result = null;
+        Object result;
         try {
             String key = generateKey(point, dCachePut.key(), dCachePut.keyGeneratorName());
             result = point.proceed();
@@ -86,6 +92,30 @@ public class DCacheAspect {
         } catch (Throwable e) {
             log.error("DCachePut join point process error", e);
             throw e;
+        }
+        return result;
+    }
+
+    private Object missCacheThenResetCacheWithLock(ProceedingJoinPoint point, DCacheLock lock,
+                                                   String key, int expireTime) throws Throwable {
+        Object result;
+        boolean isLocked = lock.lock();
+        if(isLocked) {
+            try {
+                result = dCache.getCache(key);
+                if(Objects.nonNull(result)) {
+                    return result;
+                }
+                result = point.proceed();
+                dCache.setCache(key, result, expireTime);
+            } catch (Throwable e) {
+                log.error("error when query db then set redis cache with lock, key={}", key);
+                throw e;
+            } finally {
+                lock.unlock();
+            }
+        } else {
+            result = missCacheThenResetCacheWithLock(point, lock, key, expireTime);
         }
         return result;
     }
