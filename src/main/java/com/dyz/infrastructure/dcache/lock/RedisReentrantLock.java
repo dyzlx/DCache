@@ -4,9 +4,13 @@ import com.dyz.infrastructure.dcache.impl.redis.RedisManager;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * implements redis lock reentrant by using ThreadLock<T>
+ */
 @Slf4j
 public class RedisReentrantLock extends RedisLock{
 
@@ -15,14 +19,18 @@ public class RedisReentrantLock extends RedisLock{
      */
     private static final ThreadLocal<Map<String, Integer>> THREAD_LOCK_LOCAL= new ThreadLocal<>();
 
-    public RedisReentrantLock(RedisManager redisManager) {
-        super(redisManager);
+    public RedisReentrantLock(RedisManager redisManager, String name) {
+        super(redisManager, name);
     }
 
     @Override
     protected boolean lock(Jedis jedis, String lockKey, String requestId) {
         boolean result;
         Map<String, Integer> currentThreadLockMap = THREAD_LOCK_LOCAL.get();
+        if(Objects.isNull(currentThreadLockMap)) {
+            currentThreadLockMap = new HashMap<>();
+            THREAD_LOCK_LOCAL.set(currentThreadLockMap);
+        }
         Integer lockCount = currentThreadLockMap.get(lockKey);
         if(Objects.nonNull(lockCount) && lockCount > 0) {
             currentThreadLockMap.put(lockKey, lockCount+1);

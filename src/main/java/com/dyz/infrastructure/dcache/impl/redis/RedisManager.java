@@ -18,15 +18,15 @@ public class RedisManager {
         this.jedisPool = jedisPool;
     }
 
-    public RedisLock newRedisLock() {
-        return newRedisLock(false);
+    public RedisLock newRedisLock(String name) {
+        return newRedisLock(false, name);
     }
 
-    public RedisLock newRedisLock(boolean reentrant) {
+    public RedisLock newRedisLock(boolean reentrant, String name) {
         if(reentrant) {
-            return new RedisReentrantLock(this);
+            return new RedisReentrantLock(this, name);
         } else {
-            return new RedisLock(this);
+            return new RedisLock(this, name);
         }
     }
 

@@ -6,7 +6,7 @@ import com.dyz.infrastructure.dcache.DKeyGenerator;
 import com.dyz.infrastructure.dcache.annotations.DCacheEvict;
 import com.dyz.infrastructure.dcache.annotations.DCachePut;
 import com.dyz.infrastructure.dcache.annotations.DCacheable;
-import com.dyz.infrastructure.dcache.lock.DCacheLock;
+import com.dyz.infrastructure.dcache.lock.DLock;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -26,6 +26,9 @@ import java.util.Objects;
 @Slf4j
 public class DCacheAspect {
 
+    /**
+     * will autowired in constructor method
+     */
     private DCache dCache;
 
     @Autowired
@@ -35,11 +38,11 @@ public class DCacheAspect {
     @Autowired
     private ApplicationContext applicationContext;
 
-    private DCacheLock dCacheLock;
+    private DLock dLock;
 
     public DCacheAspect(DCache dCache) {
         this.dCache = dCache;
-        dCacheLock = dCache.getDCacheLock();
+        dLock = dCache.getDCacheLock();
     }
 
     @Around("@annotation(dCacheable)")
@@ -52,7 +55,7 @@ public class DCacheAspect {
                 return result;
             }
             if(dCacheable.lockWhenQueryDB()) {
-                missCacheThenResetCacheWithLock(point, dCacheLock, key, dCacheable.expire());
+                missCacheThenResetCacheWithLock(point, dLock, key, dCacheable.expire());
             } else {
                 result = point.proceed();
                 dCache.setCache(key, result, dCacheable.expire());
@@ -96,11 +99,10 @@ public class DCacheAspect {
         return result;
     }
 
-    private Object missCacheThenResetCacheWithLock(ProceedingJoinPoint point, DCacheLock lock,
+    private Object missCacheThenResetCacheWithLock(ProceedingJoinPoint point, DLock lock,
                                                    String key, int expireTime) throws Throwable {
         Object result;
-        boolean isLocked = lock.lock();
-        if(isLocked) {
+        if(lock.lock()) {
             try {
                 result = dCache.getCache(key);
                 if(Objects.nonNull(result)) {

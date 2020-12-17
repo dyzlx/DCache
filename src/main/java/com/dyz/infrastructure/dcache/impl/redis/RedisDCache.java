@@ -2,7 +2,7 @@ package com.dyz.infrastructure.dcache.impl.redis;
 
 import com.dyz.infrastructure.dcache.DCache;
 import com.dyz.infrastructure.dcache.DCacheSerializer;
-import com.dyz.infrastructure.dcache.lock.DCacheLock;
+import com.dyz.infrastructure.dcache.lock.DLock;
 import com.dyz.infrastructure.dcache.serializer.ObjectDCacheSerializer;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
@@ -97,7 +97,7 @@ public class RedisDCache implements DCache {
     }
 
     @Override
-    public DCacheLock getDCacheLock() {
-        return redisManager.newRedisLock();
+    public DLock getDCacheLock() {
+        return redisManager.newRedisLock("D_CACHE");
     }
 }

@@ -1,7 +1,7 @@
 package com.dyz.infrastructure.dcache;
 
 
-import com.dyz.infrastructure.dcache.lock.DCacheLock;
+import com.dyz.infrastructure.dcache.lock.DLock;
 
 public interface DCache {
 
@@ -13,5 +13,5 @@ public interface DCache {
 
     void deleteCache(String key);
 
-    DCacheLock getDCacheLock();
+    DLock getDCacheLock();
 }

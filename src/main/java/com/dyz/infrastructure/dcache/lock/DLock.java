@@ -1,6 +1,6 @@
 package com.dyz.infrastructure.dcache.lock;
 
-public interface DCacheLock {
+public interface DLock {
 
     boolean lock();
 

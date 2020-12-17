@@ -7,7 +7,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
-public class JDKLock implements DCacheLock {
+public class JDKLock implements DLock {
 
     private static final long DEFAULT_LOCK_TIMEOUT = 5 * 1000;
 
@@ -25,21 +25,24 @@ public class JDKLock implements DCacheLock {
 
     @Override
     public boolean lock() {
+        boolean result = false;
         try {
-            return lock.tryLock(tryLockTimeout, TimeUnit.MILLISECONDS);
+            result = lock.tryLock(tryLockTimeout, TimeUnit.MILLISECONDS);
+            log.debug("acquire jdk lock");
         } catch (InterruptedException e) {
-            log.error("jdk lock error", e);
+            log.error("jdk lock acquire error", e);
         }
-        return false;
+        return result;
     }
 
     @Override
     public boolean unlock() {
         try {
             lock.unlock();
+            log.debug("release jdk lock");
             return true;
         } catch (Exception e) {
-            log.error("jdk unlock error", e);
+            log.error("jdk lock release error", e);
         }
         return false;
     }
