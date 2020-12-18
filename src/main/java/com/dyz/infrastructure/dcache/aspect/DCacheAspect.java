@@ -55,7 +55,7 @@ public class DCacheAspect {
                 return result;
             }
             if(dCacheable.lockWhenQueryDB()) {
-                missCacheThenResetCacheWithLock(point, dLock, key, dCacheable.expire());
+                result = missCacheThenResetCacheWithLock(point, dLock, key, dCacheable.expire());
             } else {
                 result = point.proceed();
                 dCache.setCache(key, result, dCacheable.expire());
