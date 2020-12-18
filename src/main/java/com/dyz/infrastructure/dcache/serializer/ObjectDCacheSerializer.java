@@ -1,6 +1,5 @@
 package com.dyz.infrastructure.dcache.serializer;
 
-import com.dyz.infrastructure.dcache.DCacheSerializer;
 import com.dyz.infrastructure.dcache.exception.SerializationException;
 import org.apache.commons.lang3.StringUtils;
 

@@ -2,7 +2,7 @@ package com.dyz.infrastructure.dcache.aspect;
 
 
 import com.dyz.infrastructure.dcache.DCache;
-import com.dyz.infrastructure.dcache.DKeyGenerator;
+import com.dyz.infrastructure.dcache.generator.DKeyGenerator;
 import com.dyz.infrastructure.dcache.annotations.DCacheEvict;
 import com.dyz.infrastructure.dcache.annotations.DCachePut;
 import com.dyz.infrastructure.dcache.annotations.DCacheable;
@@ -102,22 +102,21 @@ public class DCacheAspect {
     private Object missCacheThenResetCacheWithLock(ProceedingJoinPoint point, DLock lock,
                                                    String key, int expireTime) throws Throwable {
         Object result;
-        if(lock.lock()) {
-            try {
-                result = dCache.getCache(key);
-                if(Objects.nonNull(result)) {
-                    return result;
-                }
-                result = point.proceed();
-                dCache.setCache(key, result, expireTime);
-            } catch (Throwable e) {
-                log.error("error when query db then set redis cache with lock, key={}", key);
-                throw e;
-            } finally {
-                lock.unlock();
+        while(!lock.lock()) {
+            Thread.sleep(10);
+        }
+        try {
+            result = dCache.getCache(key);
+            if(Objects.nonNull(result)) {
+                return result;
             }
-        } else {
-            result = missCacheThenResetCacheWithLock(point, lock, key, expireTime);
+            result = point.proceed();
+            dCache.setCache(key, result, expireTime);
+        } catch (Throwable e) {
+            log.error("error when query db then set redis cache with lock, key={}", key);
+            throw e;
+        } finally {
+            lock.unlock();
         }
         return result;
     }

@@ -21,6 +21,4 @@ public @interface DCacheable {
     String keyGeneratorName() default "";
 
     boolean lockWhenQueryDB() default false;
-
-    long lockTimeout() default 10 * 1000;
 }

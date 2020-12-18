@@ -2,7 +2,7 @@ package com.dyz.infrastructure.dcache.impl.simple;
 
 import com.dyz.infrastructure.dcache.DCache;
 import com.dyz.infrastructure.dcache.lock.DLock;
-import com.dyz.infrastructure.dcache.lock.JDKLock;
+import com.dyz.infrastructure.dcache.lock.DJdkLock;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -43,6 +43,6 @@ public class HashMapDCache implements DCache {
 
     @Override
     public DLock getDCacheLock() {
-        return new JDKLock();
+        return new DJdkLock();
     }
 }

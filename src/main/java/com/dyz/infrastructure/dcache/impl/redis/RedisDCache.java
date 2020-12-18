@@ -1,8 +1,10 @@
 package com.dyz.infrastructure.dcache.impl.redis;
 
 import com.dyz.infrastructure.dcache.DCache;
-import com.dyz.infrastructure.dcache.DCacheSerializer;
+import com.dyz.infrastructure.dcache.serializer.DCacheSerializer;
+import com.dyz.infrastructure.dcache.config.RedisManager;
 import com.dyz.infrastructure.dcache.lock.DLock;
+import com.dyz.infrastructure.dcache.lock.redis.DRedisLock;
 import com.dyz.infrastructure.dcache.serializer.ObjectDCacheSerializer;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
@@ -16,7 +18,6 @@ public class RedisDCache implements DCache {
     private DCacheSerializer<Object> dCacheSerializer;
 
     private RedisManager redisManager;
-
 
     public RedisDCache(RedisManager redisManager) {
         this.redisManager = redisManager;
@@ -98,6 +99,6 @@ public class RedisDCache implements DCache {
 
     @Override
     public DLock getDCacheLock() {
-        return redisManager.newRedisLock("D_CACHE");
+        return new DRedisLock(this.redisManager, "d_cache", 5 * 1000);
     }
 }
