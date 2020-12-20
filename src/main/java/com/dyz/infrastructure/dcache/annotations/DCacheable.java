@@ -21,8 +21,4 @@ public @interface DCacheable {
     String keyGeneratorName() default "";
 
     boolean lockWhenQueryDB() default true;
-
-    boolean collectionValue() default false;
-
-    String identifierField() default "";
 }
