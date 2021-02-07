@@ -1,6 +1,7 @@
 package com.dyz.infrastructure.dcache.config;
 
 import com.dyz.infrastructure.dcache.DCache;
+import com.dyz.infrastructure.dcache.connect.RedisManager;
 import com.dyz.infrastructure.dcache.generator.DKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.OrdinaryDKeyGenerator;
 import com.dyz.infrastructure.dcache.generator.SqELDKeyGenerator;

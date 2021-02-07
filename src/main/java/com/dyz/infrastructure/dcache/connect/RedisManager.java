@@ -1,9 +1,10 @@
-package com.dyz.infrastructure.dcache.config;
+package com.dyz.infrastructure.dcache.connect;
 
 
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -24,6 +25,41 @@ public class RedisManager {
     public String getClientId() {
         return this.id;
     }
+
+    public void execute(RunWithJedis caller) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            caller.run(jedis);
+        } catch (JedisConnectionException e) {
+            // TODO retry
+        } catch (Exception e) {
+            log.error("error in execute with jedis", e);
+        }
+    }
+
+    public <R> R executeAndReturn(CallWithJedis<R> caller) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return caller.call(jedis);
+        } catch (JedisConnectionException e) {
+            // TODO retry
+        } catch (Exception e) {
+            log.error("error in execute with jedis", e);
+        }
+        return null;
+    }
+
+    /*
+    public void execute(CallWithJedis caller) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            caller.call(jedis);
+        } catch (Exception e) {
+            log.error("error in get jedis client", e);
+        } finally {
+            this.releaseJedisClient(jedis);
+        }
+    }
+    */
 
     public Jedis getJedisClient() {
         Jedis jedis = null;

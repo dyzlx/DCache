@@ -1,6 +1,6 @@
 package com.dyz.infrastructure.dcache.lock.redis;
 
-import com.dyz.infrastructure.dcache.config.RedisManager;
+import com.dyz.infrastructure.dcache.connect.RedisManager;
 import com.dyz.infrastructure.dcache.lock.DLock;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;

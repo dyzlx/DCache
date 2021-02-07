@@ -2,7 +2,7 @@ package com.dyz.infrastructure.dcache.impl.redis;
 
 import com.dyz.infrastructure.dcache.DCache;
 import com.dyz.infrastructure.dcache.serializer.DCacheSerializer;
-import com.dyz.infrastructure.dcache.config.RedisManager;
+import com.dyz.infrastructure.dcache.connect.RedisManager;
 import com.dyz.infrastructure.dcache.lock.DLock;
 import com.dyz.infrastructure.dcache.lock.redis.DRedisLock;
 import com.dyz.infrastructure.dcache.serializer.ObjectDCacheSerializer;
