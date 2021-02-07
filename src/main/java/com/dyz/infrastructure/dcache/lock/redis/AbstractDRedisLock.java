@@ -12,17 +12,12 @@ public abstract class AbstractDRedisLock implements DLock {
     /**
      redis lock key prefix
      */
-    private static final String REDIS_LOCK_KEY_PREFIX = "REDIS_LOCK";
+    private static final String REDIS_LOCK_KEY_PREFIX = "D_REDIS_LOCK";
 
     /**
      * default expire time
      */
     private static final long DEFAULT_EXPIRE_TIME = 10000;
-
-    /**
-     * identifier for different redis connection client
-     */
-    private String clientIdentifier;
 
     /**
      * key
@@ -34,6 +29,9 @@ public abstract class AbstractDRedisLock implements DLock {
      */
     private RedisManager redisManager;
 
+    /**
+     * lock expire time
+     */
     protected long expireTime;
 
     AbstractDRedisLock(RedisManager redisManager, String name) {
@@ -43,10 +41,9 @@ public abstract class AbstractDRedisLock implements DLock {
     AbstractDRedisLock(RedisManager redisManager, String name, long expireTime) {
         this.redisManager = redisManager;
         this.expireTime = expireTime;
-        this.clientIdentifier = redisManager.getClientId();
         this.lockKey = REDIS_LOCK_KEY_PREFIX + "_" + name;
-        log.info("init a redis lock instance, type={}, key={}, identifier={}",
-                this.getClass().getName(), this.lockKey, this.clientIdentifier);
+        log.info("init a redis lock instance, type={}, key={}, redisClientId={}",
+                this.getClass().getName(), this.lockKey, this.redisManager.getClientId());
     }
 
     protected abstract boolean lock(Jedis jedis, String lockKey, String lockIdentifier);
@@ -94,7 +91,7 @@ public abstract class AbstractDRedisLock implements DLock {
      * to avoid release the lock which belong to other client
      * @return lockIdentifier
      */
-    String getLockIdentifier() {
-        return this.clientIdentifier + ":" + Thread.currentThread().getId();
+    private String getLockIdentifier() {
+        return this.redisManager.getClientId() + ":" + Thread.currentThread().getId();
     }
 }
